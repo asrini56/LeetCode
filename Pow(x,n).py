@@ -13,3 +13,26 @@ class Solution:
             curr = curr * curr
             p = int(p / 2)
         return result
+    """
+    working - 
+    pow(3,11)- 
+    p = 11
+    curr = 3
+    result = 1
+    while 11 > 0:
+        11 % 2 == 1:
+            result = 3
+        curr = 9
+        p = 5
+    5 > 0:
+        result = 27
+        curr = 81
+        p = 2
+    2 > 0
+        curr = 81 * 81
+        p = 1
+    1 > 0:
+        result = 27 * 81 = 177147
+        p = 0
+    result = 177147
+    """
