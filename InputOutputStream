@@ -1,0 +1,11 @@
+PriorityQueue<Integer> pq = new PriorityQueue();
+int prev = 0;             //To keep track of sequence and keep polling in sequence.
+while(incomingStream){
+       pq.add(list);       //This is the incoming stream of list.
+       while(pq.peek().get(0) == prev+1){        //When the right sequence arrive we can further check the condition to remove the element which are in sequence till this point
+                if(pq.size() > 1){             // Makes sure there is atleast 1 element left in prioritty queue
+                        pq.poll();          //  streams/ removes the elementt in sequence
+                 }
+                 prev++;
+       }
+}
