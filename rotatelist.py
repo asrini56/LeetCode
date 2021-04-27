@@ -1,3 +1,29 @@
+#o(n) space
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def rotateRight(self, head: ListNode, k: int) -> ListNode:
+        if k == 0 or not head:
+            return head
+        
+        listNodes = []
+        
+        while head:
+            listNodes.append(head)
+            head = head.next if head.next else None
+        l = len(listNodes)
+        k = k % l
+        if k == 0:
+            return listNodes[0]
+
+        listNodes[l - k - 1].next = None
+        listNodes[l - 1].next = listNodes[0]
+
+        return listNodes[l - k]
+    
 class Solution:
     def rotateRight(self, head: 'ListNode', k: 'int') -> 'ListNode':
         # base cases
