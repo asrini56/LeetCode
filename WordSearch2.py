@@ -1,5 +1,5 @@
 #212. Word Search II,Time - O(M(4⋅3 L^−1))
-class Solution:
+class Solution(object):
     def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:
         WORD_KEY = '$'
         
@@ -8,7 +8,9 @@ class Solution:
             node = trie
             for letter in word:
                 # retrieve the next node; If not found, create a empty node.
-                node = node.setdefault(letter, {})
+                if letter not in node:
+                    node[letter] = {}
+                node = node[letter]
             # mark the existence of a word in trie node
             node[WORD_KEY] = word
         
@@ -54,4 +56,4 @@ class Solution:
                 if board[row][col] in trie:
                     backtracking(row, col, trie)
         
-        return matchedWords    
+        return matchedWords
