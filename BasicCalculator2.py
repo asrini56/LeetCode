@@ -1,27 +1,27 @@
 #227. Basic Calculator II, Time - O(n)
 class Solution:
     def calculate(self, s: str) -> int:
+        def update(op, num):
+            if op == '+':
+                stack.append(num)
+            elif op == '-':
+                stack.append(-num)
+            elif op == '*':
+                stack.append(stack.pop() * num)
+            elif op == '/':
+                stack.append(int(stack.pop() / num))
+                
         stack = []
-        curr = 0
-        currop = '+'
-        for i in range(len(s)):
-            char = s[i]
-            if char.isdigit():
-                curr = (curr*10) + int(char)
-            if char.isdigit() == False and not char.isspace() or i == len(s) - 1:
-                if currop == '+':
-                    stack.append(curr)
-                elif currop == '-':
-                    stack.append(-curr)
-                elif currop == '*':
-                    c = stack.pop()
-                    stack.append(c*curr)
-                elif currop == '/':
-                    c = stack.pop()
-                    stack.append(int(c/curr))
-                currop = char
-                curr = 0
-        result = 0
-        while stack:
-            result+=stack.pop()
-        return result
+        op = '+'
+        num  = 0
+        opset = set('+-/*')
+        
+        for c in s:
+            if c.isdigit():
+                num = num*10 + int(c)
+            elif c in opset:
+                update(op,num)
+                num = 0
+                op  = c
+        update(op,num)
+        return sum(stack)
