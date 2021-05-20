@@ -1,4 +1,7 @@
 #140. Word Break II, time - 0(n^2 + 2^n + w)
+"""
+N be the length of the input string and WW be the number of words in the dictionary.
+"""
 class Solution:
     def wordBreak(self, s: str, wordDict: List[str]) -> List[str]:
         all_results = []
