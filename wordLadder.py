@@ -1,3 +1,7 @@
+"""
+Time Complexity: o(m^2 * n)
+ ×N), where MM is the length of each word and NN is the total number of words in the input word list.
+"""
 class Solution:
     def ladderLength(self, beginWord: str, endWord: str, wordList: List[str]) -> int:
         if endWord not in wordList or not endWord or not beginWord or not wordList:
