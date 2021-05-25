@@ -1,19 +1,22 @@
+"""
+Let N be the length of the input string and W be the number of words in the dictionary.
+Time Complexity: O(N ^ 2 + 2^N + W)
+"""
 class Solution:
     def wordBreak(self, s: str, wordDict: List[str]) -> List[str]:
-        dp = {}
-        def word(s):
-            if s in dp:
-                return dp[s]
+        memo = {}
+        def dfs(s):
+            if s in memo:
+                return memo[s]
             res = []
-            for i in wordDict:
-                if s[:len(i)] == i:
-                    if len(i) == len(s):
-                        res.append(i)
+            for x in wordDict:
+                if s.startswith(x):
+                    if s == x:
+                        res += [x]
                     else:
-                        tmp = word(s[len(i):])
-                        for t in tmp:
-                            res.append(i + " " + t)
-            dp[s] = res
-            return res
-        return word(s)
+                        for y in dfs(s[len(x):]):
+                            res += [x + ' ' + y]
+            memo[s] = res
+            return res             
+        return dfs(s)
                     
