@@ -48,9 +48,9 @@ class MyHashMap:
         for i in range(len(bucket)):
             if bucket[i][0] == key:
                 temp = bucket[i]
-                bucket[i] = bucket[0]
-                bucket[0] = temp
-                bucket.pop(0)
+                bucket[i] = bucket[len(bucket)-1]
+                bucket[len(bucket)-1] = temp
+                bucket.pop()
                 break
                 
 
