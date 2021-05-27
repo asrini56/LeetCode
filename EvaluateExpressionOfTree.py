@@ -1,4 +1,4 @@
-# Python program to evaluate expression tree
+# Python program to evaluate expression tree -> Factory Pattern
 
 # Class to represent the nodes of syntax tree
 class node:
@@ -6,6 +6,60 @@ class node:
 		self.left = None
 		self.data = value
 		self.right = None
+from abc import ABC
+class Evaluate(ABC):
+    
+    def evaluate(self):
+        pass
+
+class Add(Evaluate):
+    def __init__(self,left,right):
+        self.left = left
+        self.right = right
+    def evaluate(self):
+        return self.left+self.right
+
+class Sub(Evaluate):
+    def __init__(self,left,right):
+        self.left = left
+        self.right = right
+    def evaluate(self):
+        return self.left-self.right
+
+class Mul(Evaluate):
+    def __init__(self,left,right):
+        self.left = left
+        self.right = right
+    def evaluate(self):
+        return self.left*self.right
+
+class Div(Evaluate):
+    def __init__(self,left,right):
+        self.left = left
+        self.right = right
+    def evaluate(self):
+        return int(self.left//self.right)
+
+    
+class EvalFactory():
+    def __init__(self,data,left,right):
+        self.data = data
+        self.left = left
+        self.right = right
+    def evaluateExp(self):
+        if self.data == '+':
+            add = Add(self.left,self.right)
+            return add.evaluate()
+        elif self.data == '-':
+            add = Sub(self.left,self.right)
+            return add.evaluate()
+        elif self.data == '*':
+            add = Mul(self.left,self.right)
+            return add.evaluate()
+        else:
+            add = Div(self.left,self.right)
+            return add.evaluate()
+        
 
 # This function receives a node of the syntax tree
 # and recursively evaluate it
@@ -26,17 +80,8 @@ def evaluateExpressionTree(root):
 	right_sum = evaluateExpressionTree(root.right)
 
 	# check which operation to apply
-	if root.data == '+':
-		return left_sum + right_sum
-	
-	elif root.data == '-':
-		return left_sum - right_sum
-	
-	elif root.data == '*':
-		return left_sum * right_sum
-	
-	else:
-		return left_sum / right_sum
+	evalFactory = EvalFactory(root.data,left_sum,right_sum)
+	return evalFactory.evaluateExp()
 
 # Driver function to test above problem
 if __name__=='__main__':
@@ -49,7 +94,7 @@ if __name__=='__main__':
 	root.right = node('-')
 	root.right.left = node('100')
 	root.right.right = node('20')
-	print evaluateExpressionTree(root)
+	print(evaluateExpressionTree(root))
 
 	root = None
 
@@ -63,6 +108,4 @@ if __name__=='__main__':
 	root.right.right = node('/')
 	root.right.right.left = node('20')
 	root.right.right.right = node('2')
-	print evaluateExpressionTree(root)
-
-# This code is contributed by Harshit Sidhwa
+	print(evaluateExpressionTree(root))
