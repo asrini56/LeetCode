@@ -1,4 +1,4 @@
-#706. Design HashMap, Time - O(N/K)
+#706. Design HashMap, Time - O(N/K) -> N is the number of all possible keys and KK is the number of predefined buckets in the hashmap, which is 2069 in our case.
 class MyHashMap:
 
     def __init__(self):
