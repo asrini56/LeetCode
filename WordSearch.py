@@ -1,4 +1,4 @@
-#79. Word Search
+#79. Word Search , time - O(n.l^3)
 class Solution:
     def exist(self, board: List[List[str]], word: str) -> bool:
             
