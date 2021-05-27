@@ -1,60 +1,55 @@
-def findLadders(self, beginWord, endWord, wordList):
-	"""
-	:type beginWord: str
-	:type endWord: str
-	:type wordList: List[str]
-	:rtype: List[List[str]]
-	"""
-	if not endWord or not beginWord or not wordList or endWord not in wordList \
-		or beginWord == endWord:
-		return []
+#Time - O(M^2 * N), M is length of words and N is total number of words in i/p list
+import collections
+class Solution:
+    def findLadders(self, beginWord, endWord, wordList):
+        # Edge cases
+        if not beginWord or not endWord or not wordList:
+            return []
+        if endWord not in wordList or not len(beginWord) == len(endWord):
+            return []
 
-	L = len(beginWord)
+        n = len(beginWord)
 
-	# Dictionary to hold combination of words that can be formed,
-	# from any given word. By changing one letter at a time.
-	all_combo_dict = collections.defaultdict(list)
-	for word in wordList:
-		for i in range(L):
-			all_combo_dict[word[:i] + "*" + word[i+1:]].append(word)
+        combs = collections.defaultdict(list)
 
-	# Build graph, BFS
-	# ans = []
-	queue = collections.deque()
-	queue.append(beginWord)
-	parents = collections.defaultdict(set)
-	visited = set([beginWord])
-	found = False 
-	depth = 0
-	while queue and not found:
-		depth += 1 
-		length = len(queue)
-		# print(queue)
-		localVisited = set()
-		for _ in range(length):
-			word = queue.popleft()
-			for i in range(L):
-				for nextWord in all_combo_dict[word[:i] + "*" + word[i+1:]]:
-					if nextWord == word:
-						continue
-					if nextWord not in visited:
-						parents[nextWord].add(word)
-						if nextWord == endWord:    
-							found = True
-						localVisited.add(nextWord)
-						queue.append(nextWord)
-		visited = visited.union(localVisited)
-	# print(parents)
-	# Search path, DFS
-	ans = []
-	def dfs(node, path, d):
-		if d == 0:
-			if path[-1] == beginWord:
-				ans.append(path[::-1])
-			return 
-		for parent in parents[node]:
-			path.append(parent)
-			dfs(parent, path, d-1)
-			path.pop()
-	dfs(endWord, [endWord], depth)
-	return ans
+        # Dict of patterns
+        for word in wordList:
+            for i in range(n):
+                pattern = word[:i] + "*" + word[i + 1:]
+                combs[pattern].append(word)
+
+        # Ensure shortest path, because longer solutions get attached to the right
+        queue = collections.deque([(beginWord, [])])
+		
+		# Avoid loops
+        visited = set()
+		
+		# Solution space
+        solutions = []
+        min_solution_length = float("inf")
+
+        while queue:
+            # Pop word and mark as visited
+            word, path_to_word = queue.popleft()
+            visited.add(word)
+
+            # Path to next word
+            next_path = path_to_word + [word]
+            if len(next_path) > min_solution_length:
+                # Smaller solutions have been found. Return.
+                return solutions
+
+            # Small solution found
+            if word == endWord:
+                print(next_path)
+                solutions.append(next_path)
+                min_solution_length = len(next_path)
+
+            # No solution found
+            for i in range(n):
+                pattern = word[:i] + "*" + word[i + 1:]
+                for next_word in combs[pattern]:
+                    if next_word not in visited:
+                        queue.append((next_word, next_path))
+
+        return solutions
