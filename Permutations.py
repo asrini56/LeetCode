@@ -1,4 +1,5 @@
 #46. Permutations
+#Time and space - O(n!)
 class Solution:
     def permute(self, nums: List[int]) -> List[List[int]]:
         def permutation(i,nums,answer):
