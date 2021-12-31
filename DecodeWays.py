@@ -1,5 +1,19 @@
 class Solution:
     def numDecodings(self, s: str) -> int:
+        """
+        1224 -> ABBD,LBD,A22D,AB24,1224 - TOTAL 5 WAYS
+        dp = [0,0,0,0,0] -> ways to decode string of size len(s)+1
+        dp = [1,1,0,0,0]
+        i = 2
+        f = 2, s = 12
+        dp = [1,1,2,0,0]
+        i = 3
+        f = 2,s=22
+        dp = [1,1,2,3,0]
+        i = 4
+        f = 4,s=24
+        dp = [1,1,2,3,5]
+        """
         # Array to store the subproblem results
         dp = [0 for _ in range(len(s) + 1)]
 
