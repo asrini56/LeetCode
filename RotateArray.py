@@ -8,7 +8,9 @@ class Solution:
     def rotate(self, nums: List[int], k: int) -> None:
         n = len(nums)
         k %= n
-
+        #reverse list
         self.reverse(nums, 0, n - 1)
+        #reverse till k-1 elements in list
         self.reverse(nums, 0, k - 1)
+        #reverse elements from k to end
         self.reverse(nums, k, n - 1)
