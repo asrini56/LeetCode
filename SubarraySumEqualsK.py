@@ -1,4 +1,10 @@
 #560. Subarray Sum Equals K, Time - O(n)
+"""
+similar to two sum
+brute force -> sum all numbers
+find a way to store sum and use them
+"""
+
 class Solution:
     def subarraySum(self, nums: List[int], k: int) -> int:
         if nums == []:
