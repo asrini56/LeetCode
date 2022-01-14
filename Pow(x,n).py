@@ -14,6 +14,16 @@ class Solution:
             p = int(p / 2)
         return result
     """
+    pow(3,2):
+    while 2 > 0:
+        result = 1
+        curr = 3 * 3= 9
+        p = 1
+    while 1>0
+        result = 1*9 = 9
+        p = 0
+    result = 9
+    
     working - 
     pow(3,11)- 
     p = 11
