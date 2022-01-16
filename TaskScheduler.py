@@ -1,4 +1,4 @@
-#621. Task Scheduler, Time - O(n)
+#621. Task Scheduler, Time - O(n), Space - O(1)
 class Solution:
     def leastInterval(self, tasks: List[str], n: int) -> int:
         freq = [0] * 26
@@ -9,7 +9,7 @@ class Solution:
         idle_time = (fmax - 1) * n
         
         while idle_time and freq:
-            print(len(freq),idle_time)
+            print(idle_time,freq)
             idle_time -= min(freq.pop(),fmax-1)
         idle_time = max(0,idle_time)
         return idle_time + len(tasks)
@@ -26,4 +26,14 @@ class Solution:
         ...
     idle = max(idle,0) = 2
     ans = 2 + 6 = 8
+    
+    
+    
+    freq = collections.Counter(tasks).values()
+        maxFreq = max(freq)
+        maxFreqCount = freq.count(maxFreq)
+            
+        ans = (maxFreq - 1) * (n+1) + maxFreqCount
+        
+        return max(ans, len(tasks))
     """
