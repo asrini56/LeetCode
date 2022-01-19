@@ -9,16 +9,22 @@ class Node:
 """
 
 class Solution:
-    def __init__(self):
-        self.visited = {}
-        
     def cloneGraph(self, node: 'Node') -> 'Node':
-        if not node:
-            return node
-        if node in self.visited:
-            return self.visited[node]
-        clone_node = Node(node.val,[])
-        self.visited[node] = clone_node
-        if node.neighbors:
-             clone_node.neighbors = [self.cloneGraph(n) for n in node.neighbors]
-        return clone_node
+        if not node: return
+         # map original nodes to their clones
+        d = {node : Node(node.val)}
+        q = deque([node])
+        
+        while q:
+            for i in range(len(q)):
+                currNode = q.popleft()
+                for nei in currNode.neighbors:
+                    if nei not in d:
+                         # store copy of the neighboring node
+                        d[nei] = Node(nei.val)
+                        q.append(nei)
+                     # connect the node copy at hand to its neighboring nodes (also copies) -------- [1]
+                    d[currNode].neighbors.append(d[nei])
+        
+         # return copy of the starting node ------- [2]
+        return d[node]
