@@ -1,6 +1,6 @@
 """
 Time complexity : O(M).
-
+M be the total number of characters in words
 Storing the letter-order relation of each letter takes O(N) time. 
 For the nested for-loops, we examine each pair of words in the outer-loop and for the inner loop, 
 we check each letter in the current word. Therefore, we will iterate over all of letters in words.
