@@ -1,0 +1,18 @@
+A = m * n
+A = list(range(A))
+random.shuffle(A)
+A = A[0:k] # this gives you k random numbers, map them back to the grid
+
+# Generate Grid
+M = [[0]* n for _ in range(m)]
+ for x in A:
+      M[x%m][int(x/m)] = "put a mine here"
+      
+"""
+Use reservoir sampling: k out of mn.
+To make it easier to understand, assign an element ID to each grid square 1..mn.
+To begin the algo, first k IDs are added to the reservoir of k elements.
+Subsequently, go through the rest of the elements (k+1 .. m*n) and generate a random number (r) between 1 and the element ID in the iteration.
+If the random number (r) is between 1 and k, replace the rth value in the reservoir with the new element ID.
+At the end, the reservoir list will have the element IDs of the grid which need to be mined. So convert these back to the grid indices.
+"""
