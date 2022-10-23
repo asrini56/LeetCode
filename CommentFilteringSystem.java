@@ -60,6 +60,20 @@ public class Post {
     // Omitted content for simplicity
 }
 
+public class Comment {
+    public string desc;
+    public Comment(string desc) {
+        this.desc = desc;
+    }
+
+    public List<string> GetAsArray() {
+        var res = new List<string>();
+        var arr = desc.Split(" ");
+        foreach(var item in arr) 
+            res.Add(item);
+    }
+}
+
 public class CommentFiltering {
 
     private PostFilter filterEngine;
@@ -70,6 +84,20 @@ public class CommentFiltering {
 
     public boolean filterPost(Post post) {
          return filterEngine.isAGoodPost(post);
+    }
+    
+    public List<Comment> comments;
+    public Filter filter;
+    public CommentsFiltering() {
+        comments = new List<Comment>();
+    }
+
+    public void AddComment(Comment c){
+        comments.Add(c);
+    }
+
+    public void RemoveComment(Comment c){
+        comments.Remove(c);
     }
 
     public static void main(String[] args) {
