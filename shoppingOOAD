@@ -1,0 +1,234 @@
+from enum import Enum
+class Customer:
+    def __init__(self,customerID):
+        self.shoppingCart = ShoppingCart()
+        self.searchObj = Search()
+        self.customerID = customerID #unique ID to reference a Customer
+        
+    def getShoppingCart(self,customerID):
+        #return self.ShoppingCart
+        pass
+    
+    def addItemsToShppingCart(self,item):
+        pass
+    
+    def updateItemsToShppingCart(self,item):
+        pass
+    
+    def removeItemsToShppingCart(self,item):
+        pass
+    
+class Guest(Customer):
+    def __init__(self):
+        pass
+    
+    def createAccount(self):
+        pass
+
+class User(Customer):
+    def __init__(self,account):
+        self.account = account
+
+class Seller(User):
+    def __init__(self):
+        pass
+    
+    def addProduct(self,product,quantity):
+        pass
+
+class Buyer(User):
+    def __init__(self):
+        self.orderObj = Order()
+    
+    def placeOrder(self,product):
+        pass
+    
+    def addReview(self,review):
+        pass
+
+class Account:
+    def __init__(self,name,email,phoneNumber,password,userName):
+        #Initialize to self variables
+        self.accountStatus = AccountStatus()
+        self.address = [] #Objects of address class
+        pass
+
+class Address:
+    def __init__(self,state,city,street,country,aptNo,pincode):
+        pass
+    
+class AccountStatus(Enum):
+    Active = 1
+    Blocked = 2
+    Inactive = 3
+
+class ShoppingCart:
+    def __init__(self):
+        self.items = []#List of items [Objects]
+        self.cartValue = 0 
+    def getCartValue(self):
+        return self.cartValue
+    
+    """
+    public void addItem(Item item);
+	public void updateItem(Item item);
+	public void deleteItem(Item item);
+	public void checkoutItems();
+	public List<Item> getItems();
+    """
+# Facotry Pattern
+class Item:
+    def __init__(self,product,quantity):
+        self.product = product
+        self.quantity = quantity
+        self.productList = []
+        
+    def addProduct(self):
+        for i in range(self.quantity):
+            self.productList.append(self.product)
+        return self.productList
+
+class Product:
+    """
+    int productId;
+	String productDescription;
+	String name;
+	ProductCategory productCategory;
+	Seller seller;
+	double cost;
+    
+    #not necessary
+	List<ProductReview> productReviews;
+	"""
+#The following enum types can be classes individually -> Eg class ELECTRONICS(Prodcut) -> class TV(ELECTRONICS)
+public enum ProductCategory {
+
+	ELECTRONICS,FURNITURE,GROCERY,MOBILE;
+}
+
+#not necessary
+class ProductReview {
+
+	String details;
+	Buyer reviewer;
+	int rating;
+
+}
+
+class search {
+
+	public List<Product> searchByName(String name);
+	public List<Product> searchByCategory(ProductCategory productCategory);
+}
+
+class Order {
+
+	int orderId;
+	List<Item> orderItem;
+	double orderValue;
+	Buyer buyer;
+	Date orderDate;
+	NotificationService notificationService;
+
+	List<OrderLog> orderLog;
+
+	public OrderStatus placeOrder();
+	public OrderStatus trackOrder();
+	public void addOrderLogs();
+	public PaymentStatus makePayment(PaymentType paymentType);
+
+}
+
+#The following enum types can be classes individually
+public enum OrderStatus {
+
+	PACKED, SHIPPED, ENROUTE, OUT_FOR_DELIVERY, DELIVERED, CANCELLED;
+}
+
+public enum PaymentStatus {
+
+	SUCCESS, ERROR, CANCELLED, REFUND_INITIATED, REFUNDED;
+
+}
+
+public enum PaymentType {
+
+	CREDIT_CARD, DEBIT_CARD, NET_BANKING, UPI;
+}
+
+#Not necessary
+class OrderLog {
+
+	String orderDetail;
+	Date createdDate;
+	OrderStatus status;
+}
+
+class NotificationDomain {
+
+	String notificationID;
+	NotificationType notificationType;
+	User user;
+
+}
+
+class NotificationService {
+
+	
+
+	public boolean sendNotification(NotificationDomain notificationDomain) {
+
+		Notification notificationObject;
+		MessageAttribute messageAttribute;
+
+		switch(notificationDomain.getNotificationType()) {
+
+
+			case NotificationType.EMAIL:
+				notificationObject = new EmailNotification();
+				messageAttribute = new MessageAttribute("abc@abc.com", notificationDomain.getUser().getAccount().getEmail(),"Order Detail ...");
+				break;
+			case NotificationType.WHATSAPP:
+				notificationObject = new WhatsappNotification();
+				messageAttribute = new MessageAttribute("9888888888", notificationDomain.getUser().getAccount().getPhoneNumber(),"Order Detail ...");
+				break;
+			default:
+				notificationObject = new SMSNotification();
+				messageAttribute = new MessageAttribute("988888888", notificationDomain.getUser().getAccount().getPhoneNumber(),"Order Detail ...");
+				break;
+		}
+
+		return notificationObject.sendNotification(messageAttribute);
+	}
+
+}
+
+class MessageAttributes {
+
+	String to;
+	String from;
+	String message;
+
+}
+
+interface Notification {
+
+	boolean sendNotification(MessageAttribute meesageAttribute);
+
+}
+
+class EmailNotification implements Notification {
+
+	boolean sendNotification(MessageAttribute meesageAttribute);
+}
+
+class WhatsappNotification implements Notification {
+
+	boolean sendNotification(MessageAttribute meesageAttribute);
+}
+
+class SMSNotification implements Notification {
+
+	boolean sendNotification(MessageAttribute meesageAttribute);
+
+}
