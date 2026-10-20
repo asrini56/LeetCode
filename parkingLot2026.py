@@ -136,23 +136,45 @@ class ParkingManager:
     def _process_payment(self, vehicle: Vehicle, amount: float) -> None:
         print(f"Processing payment of ${amount:.2f} for {vehicle.__class__.__name__}... Payment Successful!")
 
-if __name__ == '__main__':
-    parking_slots = {
-    VehicleType.SMALL: [SmallSpot()],
-    VehicleType.MEDIUM: [MediumSpot()],
-    VehicleType.LARGE: [LargeSpot()]}
+class ParkingLot:
+    def __init(self, parkingManager:ParkingManager):
+        self.parkingManager = parkingManager
+    
+    def parkVehicle(self, vehicle):
+        if self.parrkingManager.allocateSpot(vehicle):
+            print(vehicle , " parked")
+        else:
+            print("no slot")
+    
+    def releaseVehicle(self,vehicle):
+        fee = self.parkingManager.releaseSpot(vehicle)
+        if fee not None:
+            print("payment = ",fee)
+    return None
 
-    # 2. Initialize Parking Manager
-    manager = ParkingManager(parking_slots)
+
+if __name__ == '__main__':
+   # 1. Setup capacity/spots
+    spots_config = {
+        VehicleType.SMALL: [SmallSpot(), SmallSpot()],
+        VehicleType.MEDIUM: [MediumSpot(), MediumSpot()],
+        VehicleType.LARGE: [LargeSpot()]
+    }
+    
+    # 2. Initialize the Facade
+    parking_lot = ParkingLot(spots_config)
     
     # 3. Create vehicles
-    car = Car()
     bike = Bike()
     car1 = Car()
     car2 = Car()
+    car3 = Car()  # Might fail if medium spots fill up
     
-    # 4. Allocate slots
-    manager.allocateSlot(bike)  # Parks in SmallSpot (or upgrades if small is full)
-    manager.allocateSlot(car)   # Parks in MediumSpot
-    manager.allocateSlot(car1)   # Parks in MediumSpot
-    manager.allocateSlot(car2)   # Parks in MediumSpot
+    # 4. Use simple high-level facade methods
+    parking_lot.park_vehicle(bike)
+    parking_lot.park_vehicle(car1)
+    parking_lot.park_vehicle(car2)
+    parking_lot.park_vehicle(car3)  # Handled cleanly behind the facade
+    
+    # 5. Vehicle leaves and triggers payment/fee calculation
+    parking_lot.remove_vehicle(car1)
