@@ -1,4 +1,4 @@
-#7. Reverse Integer, Time - O(logN)
+#7. Reverse Integer, Time - O(1) - this can atmost run 10 times for 32 bit int
 class Solution:
     def reverse(self, x: int) -> int:
         maxInt = pow(2,31)-1
