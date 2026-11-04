@@ -1,30 +1,33 @@
 #210. Course Schedule II, Time - O(V+E)
 class Solution:
-    def findOrder(self, numCourses: int, prerequisites: List[List[int]]) -> List[int]:
-        visited = []
-        courseDict=defaultdict(list)
-        indegree = defaultdict(set)
-        outdegree = defaultdict(set)
-        for i,j in prerequisites:
-            outdegree[j].add(i)
-            indegree[i].add(j)
-        cr = 0
-        ans = []
-        st = []
-        #Checking and adding nodes with 0 indegree to ans,st
+    def findOrder(self, numCourses: int, prerequisites: list[list[int]]) -> list[int]:
+        indegree = [0] * numCourses
+        outdegree = defaultdict(list)
+        result = []
+        
+        for course, pre in prerequisites:
+            outdegree[pre].append(course)
+            indegree[course] += 1  # Increment count
+            
+        queue = deque()
+        courses = 0
+        
         for i in range(numCourses):
-            if not indegree[i]:
-                ans.append(i)
-                st.append(i)
-        while st:
-            node = st.pop()
-            #Checking and removing node from all connections
-            for x in outdegree[node]:
-                indegree[x].remove(node)
-                if not indegree[x]:
-                    ans.append(x)
-                    st.append(x)
-        if len(ans) == numCourses:
-            return ans
+            if indegree[i] == 0:
+                queue.append(i)
+                result.append(i)
+                courses += 1
+                
+        while queue:
+            temp = queue.popleft() # Use popleft for true BFS queue behavior
+            for node in outdegree[temp]:
+                indegree[node] -= 1  # O(1) decrement instead of .remove()
+                if indegree[node] == 0:
+                    courses += 1
+                    queue.append(node)
+                    result.append(node)
+        
+        if courses == numCourses:
+            return result
         else:
             return []
