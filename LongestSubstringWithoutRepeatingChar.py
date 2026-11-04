@@ -1,14 +1,29 @@
-#3. Longest Substring Without Repeating Characters, Time - O(n)
 class Solution:
     def lengthOfLongestSubstring(self, s: str) -> int:
-        dictionary = {}
-        i = 0
-        curr = [0,1]
-        st = 0
-        for i in range(len(s)):
-            if s[i] in dictionary.keys():
-                st = max(st,dictionary[s[i]]+1)
-            if curr[1] - curr[0] < (i+1) - st:
-                curr = [st,i+1]
-            dictionary[s[i]] = i
-        return len(s[curr[0]:curr[1]])
+        """
+        Calculates the length of the longest substring without repeating characters.
+        
+        Pattern: Sliding Window with Hash Map Index Tracking
+        
+        Time Complexity: O(n) - Single pass where 'right' scans each character once.
+        Space Complexity: O(min(n, m)) - 'm' is the size of the character set (e.g., 128 for ASCII).
+        """
+        max_len = 0
+        char_map = {}  # Maps character -> its most recent index
+        left = 0
+        
+        for right in range(len(s)):
+            char = s[right]
+            
+            # If we've seen this character and it's inside our active window
+            if char in char_map and char_map[char] >= left:
+                # Jump the left boundary past the previous occurrence
+                left = char_map[char] + 1
+            
+            # Update/insert the character's latest index
+            char_map[char] = right
+            
+            # Track the maximum window size seen so far
+            max_len = max(max_len, right - left + 1)
+            
+        return max_len
