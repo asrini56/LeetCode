@@ -3,28 +3,34 @@ Time Complexity: o(m^2 * n)
  ×N), where MM is the length of each word and NN is the total number of words in the input word list.
 """
 class Solution:
-    def ladderLength(self, beginWord: str, endWord: str, wordList: List[str]) -> int:
-        if endWord not in wordList or not endWord or not beginWord or not wordList:
+    def ladderLength(self, beginWord: str, endWord: str, wordList: list[str]) -> int:
+        if endWord not in wordList:
             return 0
-        L = len(beginWord)
         
-        com = defaultdict(list)
+        res = 1
+
+        adj = collections.defaultdict(list)
+
         for word in wordList:
-            for i in range(L):
-                com[word[:i]+'*'+word[i+1:]].append(word)
-        
-        queue = deque([(beginWord,1)])
+            for j in range(len(word)):
+                pattern = word[:j] + "*" + word[j+1:]
+                adj[pattern].append(word)
+
         visited = set()
         visited.add(beginWord)
-        while queue:
-            curr,level = queue.popleft()
-            for i in range(L):
-                inter = curr[:i] + '*' + curr[i+1:]
-                for word in com[inter]:
-                    if word == endWord:
-                        return level+1
-                    if word not in visited:
-                        visited.add(word)
-                        queue.append((word,level+1))
-                com[inter] = []
+        q = deque([beginWord])
+        res = 1
+
+        while q:
+            for i in range(len(q)):
+                word = q.popleft()
+                if word == endWord:
+                    return res
+                for j in range(len(word)):
+                    pattern = word[:j] + "*" + word[j+1:]
+                    for nei in adj[pattern]:
+                        if nei not in visited:
+                            visited.add(nei)
+                            q.append(nei)
+            res+=1
         return 0
