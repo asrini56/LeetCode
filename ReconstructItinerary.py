@@ -1,4 +1,5 @@
 #332. Reconstruct Itinerary, [Euler Path Finding]
+# time - O(Elog E), where E is the number of tickets (edges).
 class Solution:
     def findItinerary(self, tickets: List[List[str]]) -> List[str]:
         destination = defaultdict(list)
