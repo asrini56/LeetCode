@@ -15,6 +15,38 @@ CLASS-LEVEL DESIGN & ARCHITECTURAL DOCUMENTATION: EXTENSIBLE RATE LIMITER
 =============================================================================
 """
 
+"""
+CLASS BLUEPRINT:
+
+1. Type (Enum)
+   - Variables: BASIC, PREMIUM
+   - Methods: None
+
+2. RateLimiterConfig
+   - Variables: maxAllowedRequests, refillTime
+   - Methods: __init__()
+
+3. RateLimiter (ABC)
+   - Variables: None
+   - Methods: allowrequests(requestId: str) -> bool
+
+4. TokenBucketAlgorithm (inherits RateLimiter)
+   - Variables: configRule, capacity, refill_time, _buckets, _lock
+   - Methods: __init__(configRule), allowrequests(requestId: str) -> bool
+
+5. FixedWindow (inherits RateLimiter)
+   - Variables: configRule, max_requests, window_size, _windows, _lock
+   - Methods: __init__(configRule), allowrequests(requestId: str) -> bool
+
+6. SlidingWindowLog (inherits RateLimiter)
+   - Variables: configRule, capacity, refill_time, logs, lock
+   - Methods: __init__(configRule), allowrequests(requestId: str) -> bool
+
+7. RateLimitManager
+   - Variables: limiters
+   - Methods: __init__(), allowrequests(requestId: str, userType: Type) -> bool
+"""
+
 from abc import ABC, abstractmethod
 from enum import Enum
 import threading
@@ -26,11 +58,6 @@ class Type(Enum):
     PREMIUM = 2
 
 
-# =============================================================================
-# class RateLimiterConfig:
-# - maxAllowedRequests
-# - refillTime
-# =============================================================================
 class RateLimiterConfig:
     """Encapsulates configuration rules for request thresholds and time windows."""
     def __init__(self, maxAllowedRequests: int, refillTime: int):
@@ -38,10 +65,6 @@ class RateLimiterConfig:
         self.refillTime = refillTime
 
 
-# =============================================================================
-# class RateLimiter: -> abstract class
-#     +allowrequests(requestId: str, type)
-# =============================================================================
 class RateLimiter(ABC):
     """Abstract base class strategy interface for rate-limiting algorithms."""
     @abstractmethod
@@ -49,11 +72,6 @@ class RateLimiter(ABC):
         pass
 
 
-# =============================================================================
-# class TokenBucketAlgorithm -> implements RateLimiter :
-# - configRule: RateLimiterConfig
-#     +allowrequests(requestId)
-# =============================================================================
 class TokenBucketAlgorithm(RateLimiter):
     def __init__(self, configRule: RateLimiterConfig):
         self.configRule = configRule
@@ -82,11 +100,6 @@ class TokenBucketAlgorithm(RateLimiter):
             return False
 
 
-# =============================================================================
-# class FixedWindow -> implements RateLimiter :
-# - configRule: RateLimiterConfig
-#     +allowrequests(requestId)
-# =============================================================================
 class FixedWindow(RateLimiter):
     def __init__(self, configRule: RateLimiterConfig):
         self.configRule = configRule
@@ -114,11 +127,6 @@ class FixedWindow(RateLimiter):
             return False
 
 
-# =============================================================================
-# class SlidingWindowLog -> implements RateLimiter :
-# - configRule: RateLimiterConfig
-#     +allowrequests(requestId)
-# =============================================================================
 class SlidingWindowLog(RateLimiter):
     def __init__(self, configRule: RateLimiterConfig):
         self.configRule = configRule
@@ -137,7 +145,6 @@ class SlidingWindowLog(RateLimiter):
 
             queue = self.logs[requestId]
 
-            # Prune expired timestamps in O(1) per pop
             while queue and queue[0] <= cutoff:
                 queue.popleft()
             
@@ -148,18 +155,12 @@ class SlidingWindowLog(RateLimiter):
             return False
 
 
-# =============================================================================
-# RateLimitManager ->
-# - requestId
-#     +allowrequests(requestId, userType: Type)
-# =============================================================================
 class RateLimitManager:
     """
     Facade class coordinating user tiers and routing requests to their 
     configured rate-limiting algorithm strategies.
     """
     def __init__(self):
-        # Configuring distinct algorithms and rules per client tier
         self.limiters = {
             Type.BASIC: TokenBucketAlgorithm(
                 RateLimiterConfig(maxAllowedRequests=5, refillTime=60)
