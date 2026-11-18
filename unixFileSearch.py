@@ -1,91 +1,118 @@
-from abc import ABC
-class File():
-    def __init__(self, name:str, size:int):
+"""
+CLASS BLUEPRINT:
+
+1. File
+   - Variables: name, size, isDirectory, children, extension, fileName
+   - Methods: __init__()
+
+2. Filter (ABC)
+   - Variables: None
+   - Methods: search(file: File) -> bool
+
+3. NameFilter (inherits Filter)
+   - Variables: name
+   - Methods: __init__(name: str), search(file: File) -> bool
+
+4. MinSizeFilter (inherits Filter)
+   - Variables: size
+   - Methods: __init__(size: int), search(file: File) -> bool
+
+5. ExtensionFilter (inherits Filter)
+   - Variables: extension
+   - Methods: __init__(extension: str), search(file: File) -> bool
+
+6. AndFilter (inherits Filter)
+   - Variables: filterSet
+   - Methods: __init__(filterSet), addFilter(filter: Filter), search(file: File) -> bool
+
+7. ORFilter (inherits Filter)
+   - Variables: filterSet
+   - Methods: __init__(filterSet), addFilter(filter: Filter), search(file: File) -> bool
+
+8. FileSearchEngine
+   - Variables: None
+   - Methods: createFile(name: str, size: int) -> File, 
+              getFilesFromDirectory(directory: File, filterRule: Optional[Filter]) -> List[File]
+"""
+
+from abc import ABC, abstractmethod
+from typing import List, Optional, Set
+
+class File:
+    def __init__(self, name: str, size: int):
         self.name = name
         self.size = size
         self.isDirectory = False if "." in self.name else True
-        self.children = []
+        self.children: List['File'] = []
         if "." in self.name:
-            self.extension = self.name.split(".")[1]
-            self.fileName = self.name.split(".")[0]
+            parts = self.name.split(".", 1)
+            self.fileName = parts[0]
+            self.extension = parts[1]
         else:
-            self.extension = None
             self.fileName = self.name
+            self.extension = None
 
 class Filter(ABC):
-    def __init__(self):
-        pass
-    
-    def search(self, file):
+    @abstractmethod
+    def search(self, file: File) -> bool:
         pass
     
 class NameFilter(Filter):
-    def __init__(self, file):
-        self.file = file
+    def __init__(self, name: str):
+        self.name = name
     
-    def search(self,file: File):
-        return self.file == file.fileName
+    def search(self, file: File) -> bool:
+        return self.name == file.fileName
 
 class MinSizeFilter(Filter):
-    def __init__(self, size):
+    def __init__(self, size: int):
         self.size = size
     
-    def search(self,file: File):
+    def search(self, file: File) -> bool:
         return file.size >= self.size
 
 class ExtensionFilter(Filter):
-    def __init__(self, extension):
+    def __init__(self, extension: str):
         self.extension = extension
     
-    def search(self,file: File):
-        return file.extension == self.extension
-
-class LogicalFilters(Filter):
-    def __init__(self):
-        pass
-    
-    def addFilter(self, filter:Filter):
-        pass
-    
-    def getFilesFromDirectory(self, directory:str):
-        pass
+    def search(self, file: File) -> bool:
+        return self.extension == file.extension
 
 class AndFilter(Filter):
-    def __init__(self, filterSet=None):
+    def __init__(self, filterSet: Optional[Set[Filter]] = None):
         self.filterSet = filterSet if filterSet is not None else set()
     
-    def addFilter(self, filter:Filter):
+    def addFilter(self, filter: Filter):
         self.filterSet.add(filter)
     
-    def search(self,file:File):
-        for filter in self.filterSet:
-            if not filter.search(file):
+    def search(self, file: File) -> bool:
+        for f in self.filterSet:
+            if not f.search(file):
                 return False
         return True
 
 class ORFilter(Filter):
-    def __init__(self, filterSet=None):
+    def __init__(self, filterSet: Optional[Set[Filter]] = None):
         self.filterSet = filterSet if filterSet is not None else set()
     
-    def addFilter(self, filter:Filter):
+    def addFilter(self, filter: Filter):
         self.filterSet.add(filter)
     
-    def search(self,file:File):
-        for filter in self.filterSet:
-            if filter.search(file):
+    def search(self, file: File) -> bool:
+        for f in self.filterSet:
+            if f.search(file):
                 return True
         return False
 
-class FileSearchEngine():
-    # can add create directory and attach files as children
-    def createFile(self, name, size):
-        file = File(name,size)
-        print("Create file with name:%s and size:%s", name,size)
+class FileSearchEngine:
+    def createFile(self, name: str, size: int) -> File:
+        file = File(name, size)
+        print(f"Created file with name: {name} and size: {size}")
         return file
     
-    def getFilesFromDirectory(self, directory:str, filterRule:Filter=None) -> list:
-        files = list()
-        def dfs(root:File):
+    def getFilesFromDirectory(self, directory: File, filterRule: Optional[Filter] = None) -> List[File]:
+        files = []
+        def dfs(root: File):
             for child in root.children:
                 if child.isDirectory:
                     dfs(child)
@@ -96,32 +123,28 @@ class FileSearchEngine():
         dfs(directory)
         return files
 
-fileSearchEngine = FileSearchEngine()
+if __name__ == '__main__':
+    fileSearchEngine = FileSearchEngine()
 
-directory = fileSearchEngine.createFile("root",4)
-directory1 = fileSearchEngine.createFile("root1",5)
+    directory = fileSearchEngine.createFile("root", 4)
+    directory1 = fileSearchEngine.createFile("root1", 5)
 
-file1 = fileSearchEngine.createFile("abc.txt",3)
-file2 = fileSearchEngine.createFile("abcde.png",5)
-file3 = fileSearchEngine.createFile("abcdef.png",6)
+    file1 = fileSearchEngine.createFile("abcdef.txt", 3)
+    file2 = fileSearchEngine.createFile("abcde.png", 5)
+    file3 = fileSearchEngine.createFile("abcdef.png", 6)
 
-directory.children = [directory1,file1,file2]
-directory1.children = [file3]
+    directory.children = [directory1, file1, file2]
+    directory1.children = [file3]
 
-#initial test
-result = fileSearchEngine.getFilesFromDirectory(directory)
+    nameFilter = NameFilter("abcdef")
+    extensionFilter = ExtensionFilter("png")
 
-nameFilter = NameFilter("abcdef")
-extensionFilter = ExtensionFilter("png")
+    andFilter = AndFilter()
+    andFilter.addFilter(nameFilter)
+    andFilter.addFilter(extensionFilter)
 
-andFilter = AndFilter()
-
-andFilter.addFilter(nameFilter)
-andFilter.addFilter(extensionFilter)
-
-#result = fileSearchEngine.getFilesFromDirectory(directory, andFilter)
-print("Files Found: ")
-
-for file in result:
-    print(file.name)
+    result = fileSearchEngine.getFilesFromDirectory(directory, andFilter)
     
+    print("\nFiles Found matching filters:")
+    for file in result:
+        print(f"- {file.name}")
