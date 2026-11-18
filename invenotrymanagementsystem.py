@@ -1,3 +1,26 @@
+"""
+CLASS BLUEPRINT:
+
+1. AlertListener (ABC)
+   - Variables: None
+   - Methods: on_low_stock(warehouse_id: str, product_id: str, current_stock: int)
+
+2. ConsoleAlertListener (inherits AlertListener)
+   - Variables: None
+   - Methods: on_low_stock(warehouse_id: str, product_id: str, current_stock: int)
+
+3. Warehouse
+   - Variables: warehouse_id, stock, thresholds, lock
+   - Methods: __init__(), set_threshold(), add_stock(), remove_stock(), 
+              get_available_stock(), is_below_threshold()
+
+4. InventoryManager
+   - Variables: warehouses, alert_listeners, global_lock
+   - Methods: __init__(), add_warehouse(), register_alert_listener(), receive_shipment(), 
+              fulfill_order(), transfer_stock(), find_warehouses_for_fulfillment(), 
+              _get_warehouse_or_raise(), _check_and_trigger_alerts()
+"""
+
 from abc import ABC, abstractmethod
 import threading
 
