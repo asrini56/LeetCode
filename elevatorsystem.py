@@ -1,3 +1,29 @@
+"""
+CLASS BLUEPRINT:
+
+1. Direction (Enum)
+   - Variables: UP, DOWN, IDLE
+   - Methods: None
+
+2. RequestType (Enum)
+   - Variables: PICKUP_UP, PICKUP_DOWN, DESTINATION
+   - Methods: None
+
+3. Request
+   - Variables: floor, type
+   - Methods: __init__(), get_floor(), get_type(), __eq__(), __hash__()
+
+4. Elevator
+   - Variables: car_id, current_floor, direction, requests, min_floor, max_floor
+   - Methods: __init__(), get_current_floor(), get_direction(), add_request(), 
+              step(), has_requests_ahead(), has_requests_at_or_beyond()
+
+5. ElevatorController
+   - Variables: min_floor, max_floor, elevators
+   - Methods: __init__(), request_elevator(), step(), select_best_elevator(), 
+              find_committed_to_floor(), find_nearest_idle(), find_nearest()
+"""
+
 from enum import Enum
 
 class Direction(Enum):
