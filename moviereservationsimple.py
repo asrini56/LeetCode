@@ -8,6 +8,48 @@ Key Interview Checkpoints Covered:
 3. Concurrency & Safety: Per-seat lock coordination and deadlock prevention (sorting).
 4. Orchestration: EventManager tying validation, holding, and payment together.
 =============================================================================
+
+"""
+CLASS BLUEPRINT:
+
+1. TicketState (Enum)
+   - Variables: available, hold, booked
+   - Methods: None
+
+2. Seat
+   - Variables: seat_number, row
+   - Methods: __init__()
+
+3. Ticket
+   - Variables: ticket_id, seat, state, ttl, holdTime
+   - Methods: __init__(), checkIsexpired(), isavailable(), holdSeat(), bookSeat(), freeSeat()
+
+4. Venue (ABC)
+   - Variables: id, name
+   - Methods: __init__(), getEvents()
+
+5. Theatre (inherits Venue)
+   - Variables: Events
+   - Methods: __init__(), addEvent(), getEvents()
+
+6. Events (ABC)
+   - Variables: id, name, time
+   - Methods: __init__(), getRunningVenues()
+
+7. Movie (inherits Events)
+   - Variables: listOfVenues
+   - Methods: __init__(), getRunningVenues()
+
+8. Payment (ABC)
+   - Variables: None
+   - Methods: makePayment(amount: float) -> bool
+   |-- Card: cardnumber, cvv, __init__(), makePayment()
+   |-- Upi: upi_id, __init__(), makePayment()
+
+9. EventManager
+   - Variables: _locks, _guard, event, venue, time, ticketToBook, ticket_map
+   - Methods: __init__(), _fetch_ticket_map(), listEvent(), checkEvent(), 
+              getTicketToBook(), makePayment(), bookTicket()
 """
 
 from abc import ABC, abstractmethod
@@ -15,32 +57,28 @@ from enum import Enum
 from datetime import datetime, timedelta
 import threading
 
-class SeatState(Enum):
+class TicketState(Enum):
     available = 1
     hold = 2
     booked = 3
 
 
-# =============================================================================
-# class Seat:
-# - state: SeatState
-# - ttl -> 0
-# - holdTime -> time
-#     +isavailable() -> check if available based on seat state, return true is available
-#     +bookSeat() -> mark state as booked
-#     +holdSeat() -> mark state as hold -> mark ttl as 10
-#     +freeSeat() -> mark as available
-#     +checkIsexpired() -> check if current time - holdTime >= ttl and mark seat as available if so
-# =============================================================================
 class Seat:
-    def __init__(self, seat_id: str):
-        self.seat_id = seat_id
-        self.state = SeatState.available
+    def __init__(self, seat_number: str, row: str):
+        self.seat_number = seat_number
+        self.row = row
+
+
+class Ticket:
+    def __init__(self, ticket_id: str, seat: Seat):
+        self.ticket_id = ticket_id
+        self.seat = seat
+        self.state = TicketState.available
         self.ttl = 10  # minutes
         self.holdTime: datetime | None = None
 
     def checkIsexpired(self) -> bool:
-        if self.state == SeatState.hold and self.holdTime:
+        if self.state == TicketState.hold and self.holdTime:
             if datetime.now() - self.holdTime >= timedelta(minutes=self.ttl):
                 self.freeSeat()
                 return True
@@ -49,26 +87,21 @@ class Seat:
     def isavailable(self) -> bool:
         if self.checkIsexpired():
             return True
-        return self.state == SeatState.available
+        return self.state == TicketState.available
 
     def holdSeat(self) -> None:
-        self.state = SeatState.hold
+        self.state = TicketState.hold
         self.holdTime = datetime.now()
 
     def bookSeat(self) -> None:
-        self.state = SeatState.booked
+        self.state = TicketState.booked
         self.holdTime = None
 
     def freeSeat(self) -> None:
-        self.state = SeatState.available
+        self.state = TicketState.available
         self.holdTime = None
 
 
-# =============================================================================
-# class Venue: -> abstract class
-# - id, name
-#     +getEvents() -> list the events in this venue
-# =============================================================================
 class Venue(ABC):
     def __init__(self, id: str, name: str):
         self.id = id
@@ -79,32 +112,21 @@ class Venue(ABC):
         pass
 
 
-# =============================================================================
-# class theatre -> implements venue
-# - Events -> dictionary of events with time and seatmaps
-#     addEvent() -> add event if no clash
-#     getEvents() -> return list of events
-# =============================================================================
 class Theatre(Venue):
     def __init__(self, id: str, name: str):
         super().__init__(id, name)
-        self.Events: dict[str, list[tuple[datetime, dict[str, Seat]]]] = {}
+        self.Events: dict[str, list[tuple[datetime, dict[str, Ticket]]]] = {}
 
-    def addEvent(self, event: str, time: datetime, ListOfseats: dict[str, Seat]) -> bool:
+    def addEvent(self, event: str, time: datetime, ListOftickets: dict[str, Ticket]) -> bool:
         if event not in self.Events:
             self.Events[event] = []
-        self.Events[event].append((time, ListOfseats))
+        self.Events[event].append((time, ListOftickets))
         return True
 
     def getEvents(self) -> list:
         return list(self.Events.keys())
 
 
-# =============================================================================
-# class Events -> abstract class
-# - id, name, time
-#     +getRunningVenues()
-# =============================================================================
 class Events(ABC):
     def __init__(self, id: str, name: str, time: datetime):
         self.id = id
@@ -116,10 +138,6 @@ class Events(ABC):
         pass
 
 
-# =============================================================================
-# class Movie -> implements Events
-#     +getRunningVenues() -> provides list of venues hosting this event with time
-# =============================================================================
 class Movie(Events):
     def __init__(self, id: str, name: str, time: datetime):
         super().__init__(id, name, time)
@@ -134,10 +152,6 @@ class Movie(Events):
         return running_info if running_info else []
 
 
-# =============================================================================
-# class Payment -> abstract class -> strategy pattern 
-#         +makePayment()
-# =============================================================================
 class Payment(ABC):
     @abstractmethod
     def makePayment(self, amount: float) -> bool:
@@ -163,13 +177,7 @@ class Upi(Payment):
         return True
 
 
-# =============================================================================
-# class EventManager:
-# - event, venue, time, seatToBook
-#     +listEvent(), +checkEvent(), +getSeatToBook(), +makePayment(), +bookSeat()
-# =============================================================================
 class EventManager:
-    # Simple class-level lock mapping to simulate per-seat distributed locks
     _locks = {}
     _guard = threading.Lock()
 
@@ -177,14 +185,14 @@ class EventManager:
         self.event = event
         self.venue = venue
         self.time = time
-        self.seatToBook: list[str] | None = None
-        self.seat_map = self._fetch_seat_map()
+        self.ticketToBook: list[str] | None = None
+        self.ticket_map = self._fetch_ticket_map()
 
-    def _fetch_seat_map(self) -> dict[str, Seat]:
+    def _fetch_ticket_map(self) -> dict[str, Ticket]:
         if isinstance(self.venue, Theatre) and self.event.name in self.venue.Events:
-            for show_time, seats in self.venue.Events[self.event.name]:
+            for show_time, tickets in self.venue.Events[self.event.name]:
                 if show_time == self.time:
-                    return seats
+                    return tickets
         return {}
 
     def listEvent(self) -> list[tuple[Venue, datetime]]:
@@ -196,26 +204,24 @@ class EventManager:
                 return True
         return False
 
-    def getSeatToBook(self, seat_ids: list[str]) -> list[str]:
-        self.seatToBook = seat_ids
-        return self.seatToBook
+    def getTicketToBook(self, ticket_ids: list[str]) -> list[str]:
+        self.ticketToBook = ticket_ids
+        return self.ticketToBook
 
     def makePayment(self, payment: Payment, amount: float) -> bool:
         return payment.makePayment(amount)
 
-    def bookSeat(self, seat_ids: list[str], payment: Payment, amount: float) -> bool:
+    def bookTicket(self, ticket_ids: list[str], payment: Payment, amount: float) -> bool:
         if not self.checkEvent():
             raise ValueError("Event not scheduled at this venue/time.")
 
-        target_seats = self.getSeatToBook(seat_ids)
-        # Deadlock Prevention: Sort seat IDs alphabetically/numerically
-        sorted_seats = sorted(target_seats)
+        target_tickets = self.getTicketToBook(ticket_ids)
+        sorted_tickets = sorted(target_tickets)
         locked_items = []
 
         try:
-            # 1. Acquire locks per seat
-            for seat_id in sorted_seats:
-                lock_key = f"{self.venue.id}_{self.event.id}_{self.time}_{seat_id}"
+            for ticket_id in sorted_tickets:
+                lock_key = f"{self.venue.id}_{self.event.id}_{self.time}_{ticket_id}"
                 with EventManager._guard:
                     if lock_key not in EventManager._locks:
                         EventManager._locks[lock_key] = threading.Lock()
@@ -223,38 +229,35 @@ class EventManager:
                 EventManager._locks[lock_key].acquire()
                 locked_items.append(lock_key)
 
-            # 2. Check availability & hold
-            for seat_id in sorted_seats:
-                seat = self.seat_map.get(seat_id)
-                if not seat or not seat.isavailable():
-                    raise RuntimeError(f"Seat {seat_id} is unavailable.")
+            for ticket_id in sorted_tickets:
+                ticket = self.ticket_map.get(ticket_id)
+                if not ticket or not ticket.isavailable():
+                    raise RuntimeError(f"Ticket {ticket_id} is unavailable.")
 
-            for seat_id in sorted_seats:
-                self.seat_map[seat_id].holdSeat()
+            for ticket_id in sorted_tickets:
+                self.ticket_map[ticket_id].holdSeat()
 
-            print(f"Seats {sorted_seats} placed on HOLD.")
+            print(f"Tickets {sorted_tickets} placed on HOLD.")
 
-            # 3. Process Payment
             if self.makePayment(payment, amount):
-                for seat_id in sorted_seats:
-                    self.seat_map[seat_id].bookSeat()
-                print("Payment successful! Seats BOOKED.")
+                for ticket_id in sorted_tickets:
+                    self.ticket_map[ticket_id].bookSeat()
+                print("Payment successful! Tickets BOOKED.")
                 return True
             else:
-                for seat_id in sorted_seats:
-                    self.seat_map[seat_id].freeSeat()
-                print("Payment failed. Released seats back to available.")
+                for ticket_id in sorted_tickets:
+                    self.ticket_map[ticket_id].freeSeat()
+                print("Payment failed. Released tickets back to available.")
                 return False
 
         except Exception as e:
             print(f"Error during booking: {e}. Rolling back...")
-            for seat_id in sorted_seats:
-                seat = self.seat_map.get(seat_id)
-                if seat and seat.state == SeatState.hold:
-                    seat.freeSeat()
+            for ticket_id in sorted_tickets:
+                ticket = self.ticket_map.get(ticket_id)
+                if ticket and ticket.state == TicketState.hold:
+                    ticket.freeSeat()
             return False
 
         finally:
-            # Release locks
             for lock_key in locked_items:
                 EventManager._locks[lock_key].release()
