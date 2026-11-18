@@ -1,3 +1,36 @@
+"""
+CLASS BLUEPRINT:
+
+1. ReservationStatus (Enum)
+   - Variables: ACTIVE, COMMITTED, EXPIRED, RELEASED
+   - Methods: None
+
+2. AlertListener (ABC)
+   - Variables: None
+   - Methods: on_low_stock(warehouse_id: str, product_id: str, current_stock: int)
+
+3. ConsoleAlertListener (inherits AlertListener)
+   - Variables: None
+   - Methods: on_low_stock(warehouse_id: str, product_id: str, current_stock: int)
+
+4. StockReservation
+   - Variables: reservation_id, product_id, warehouse_id, quantity, expires_at, status
+   - Methods: __init__(), is_expired(), update_status()
+
+5. Warehouse
+   - Variables: warehouse_id, stock, reserved, thresholds, lock
+   - Methods: __init__(), set_threshold(), add_stock(), remove_stock(), 
+              reserve_stock(), commit_reservation(), release_reservation_stock(), 
+              get_available_stock(), get_available_stock_unlocked(), is_below_threshold()
+
+6. InventoryManager
+   - Variables: warehouses, reservations, alert_listeners, global_lock, _running, _cleanup_thread
+   - Methods: __init__(), add_warehouse(), register_alert_listener(), receive_shipment(), 
+              create_checkout_reservation(), commit_checkout_reservation(), transfer_stock(), 
+              find_warehouses_for_fulfillment(), _get_warehouse_or_raise(), 
+              _check_and_trigger_alerts(), _background_ttl_worker()
+"""
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from datetime import datetime, timedelta
@@ -131,7 +164,6 @@ class InventoryManager:
         """Step 1 of checkout: Temporarily hold stock for a customer"""
         warehouse = self._get_warehouse_or_raise(warehouse_id)
         
-        # Attempt to lock stock in the warehouse
         success = warehouse.reserve_stock(product_id, quantity)
         if not success:
             return False
@@ -155,7 +187,6 @@ class InventoryManager:
             warehouse = self.warehouses[reservation.warehouse_id]
             warehouse.commit_reservation(reservation.product_id, reservation.quantity)
 
-            # Check if permanent reduction breached low-stock threshold
             self._check_and_trigger_alerts(warehouse, reservation.product_id)
             return True
 
@@ -166,7 +197,6 @@ class InventoryManager:
         source = self._get_warehouse_or_raise(from_warehouse_id)
         dest = self._get_warehouse_or_raise(to_warehouse_id)
 
-        # Enforce deadlock-free consistent lock ordering
         first_lock, second_lock = sorted([source, dest], key=lambda w: w.warehouse_id)
 
         with first_lock.lock:
@@ -204,11 +234,7 @@ class InventoryManager:
     def _background_ttl_worker(self):
         """Background thread that automatically sweeps and releases expired cart reservations"""
         while self._running:
-            time.sleep(2)  # Poll every 2 seconds
+            time.sleep(2)
             with self.global_lock:
                 for res_id, reservation in list(self.reservations.items()):
-                    if reservation.status == ReservationStatus.ACTIVE and reservation.is_expired():
-                        reservation.update_status(ReservationStatus.EXPIRED)
-                        warehouse = self.warehouses.get(reservation.warehouse_id)
-                        if warehouse:
-                            warehouse.release_reservation_stock(reservation.product_id, reservation.quantity)
+                    if reservation.status == ReservationStatus.ACTIVE and reservation
