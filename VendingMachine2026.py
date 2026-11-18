@@ -1,3 +1,35 @@
+"""
+CLASS BLUEPRINT:
+
+1. Product
+   - Variables: name, price
+   - Methods: __init__(name: str, price: float)
+
+2. Inventory
+   - Variables: _stock, _products, _lock
+   - Methods: __init__(), add_product(), get_product(), get_quantity(), deduct(), is_available()
+
+3. PaymentStrategy (ABC)
+   - Variables: None
+   - Methods: pay(amount: float) -> bool
+   |-- CashPayment: inserted_amount, __init__(), pay()
+   |-- CreditCardPayment: card_number, cvv, __init__(), pay()
+   |-- MobileNfcPayment: device_token, __init__(), pay()
+
+4. VendingMachineState (ABC)
+   - Variables: None
+   - Methods: select_product(), make_payment(), dispense(), cancel()
+   |-- IdleState: select_product(), make_payment(), dispense(), cancel()
+   |-- PaymentPendingState: select_product(), make_payment(), dispense(), cancel()
+   |-- DispensingState: select_product(), make_payment(), dispense(), cancel()
+
+5. VendingMachine
+   - Variables: inventory, _idle_state, _payment_state, _dispensing_state, _current_state, _selected_product_code, _lock
+   - Methods: __init__(), set_state(), get_idle_state(), get_payment_state(), get_dispensing_state(), 
+              set_selected_product(), get_selected_product(), reset_selection(), 
+              select_product(), make_payment(), cancel()
+"""
+
 from abc import ABC, abstractmethod
 from threading import Lock
 from typing import Dict
@@ -127,7 +159,6 @@ class PaymentPendingState(VendingMachineState):
     def make_payment(self, machine, payment_strategy: PaymentStrategy):
         product = machine.inventory.get_product(machine.get_selected_product())
         
-        # Execute selected payment strategy
         success = payment_strategy.pay(product.price)
         if success:
             machine.set_state(machine.get_dispensing_state())
@@ -194,7 +225,6 @@ class VendingMachine:
         with self._lock:
             self._selected_product_code = None
 
-    # Public thread-safe transaction endpoints
     def select_product(self, code: str):
         with self._lock:
             self._current_state.select_product(self, code)
@@ -212,7 +242,6 @@ class VendingMachine:
 if __name__ == "__main__":
     machine = VendingMachine()
 
-    # Setup inventory
     machine.inventory.add_product("A1", Product("Coke", 1.50), 2)
     machine.inventory.add_product("A2", Product("Chips", 1.00), 1)
 
@@ -226,4 +255,4 @@ if __name__ == "__main__":
 
     print("\n--- Test 3: New Payment Type (Mobile NFC) & Cancellation ---")
     machine.select_product("A1")
-    machine.cancel()  # Cancels before payment
+    machine.cancel()
