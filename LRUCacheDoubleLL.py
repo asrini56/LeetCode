@@ -1,65 +1,64 @@
-class DoubleLinkedList:
-    def __init__(self,key = 0,val=0,next=None,prev=None):
+class Node:
+    def __init__(self,key = 0, val=0, next = None, prev = None):
         self.key = key
         self.val = val
         self.next = next
         self.prev = prev
+
+
 class LRUCache:
 
     def __init__(self, capacity: int):
-        self.hashMap = {}
         self.capacity = capacity
-        self.head = DoubleLinkedList(0,0)
-        self.tail = DoubleLinkedList(-1,-1)
+        self.head = Node()
+        self.tail = Node()
         self.head.next = self.tail
         self.tail.prev = self.head
+        self.cache = {}
+    
+    def addToHead(self, node:Node):
+        nextNode = self.head.next
+        self.head.next = node
+
+        node.next = nextNode
+        nextNode.prev = node
+        node.prev = self.head
+
+    
+    def remove(self, node:Node):
+        currentNode = node
+        currentPrev = node.prev
+        currentNext = node.next
+
+        currentPrev.next = currentNext
+        currentNext.prev = currentPrev
         
 
     def get(self, key: int) -> int:
-        if key not in self.hashMap:
-            return -1
-        else:
-            node = self.hashMap[key]
+        if key in self.cache:
+            node = self.cache[key]
             self.remove(node)
-            self.makeHead(node)
+            self.addToHead(node)
             return node.val
-            
+        return -1
         
 
     def put(self, key: int, value: int) -> None:
-        if key not in self.hashMap:
-            if len(self.hashMap) == self.capacity:
-                nodeToRemove = self.tail.prev
-                keyToRemove = nodeToRemove.key
-                node = DoubleLinkedList(key,value)
-                self.removeFromTail(nodeToRemove)
-                del self.hashMap[keyToRemove]
-            node = DoubleLinkedList(key,value)
-            self.makeHead(node)
-            self.hashMap[key] = node
-        elif key in self.hashMap:
-            node = self.hashMap[key]
+        if key in self.cache:
+            node = self.cache[key]
+            node.val = value
             self.remove(node)
-            node = DoubleLinkedList(key,value)
-            self.makeHead(node)
-            self.hashMap[key] = node
-    
-    def remove(self,nodeToRemove):
-        prevNode = nodeToRemove.prev
-        prevNode.next = nodeToRemove.next
-        nodeToRemove.next.prev = prevNode
-        
-    def removeFromTail(self,nodeToRemove):
-        prevNode = nodeToRemove.prev
-        prevNode.next = self.tail
-        self.tail.prev = prevNode
-    
-    def makeHead(self,node):
-        currentHead = self.head.next
-        self.head.next = node
-        node.next = currentHead
-        node.prev = self.head
-        currentHead.prev = node
+            self.addToHead(node)
+        else:
+            if len(self.cache) >= self.capacity:
+                lru = self.tail.prev
+                self.remove(lru)
+                del self.cache[lru.key]
+            
+            node = Node(key , value)
+            self.addToHead(node)
+            self.cache[key] = node
+            
         
 
 
