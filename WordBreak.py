@@ -1,3 +1,26 @@
+"""
+        ========================================================================
+        STEP-BY-STEP WALKTHROUGH
+        ========================================================================
+        Example: s = "leetcode", wordDict = ["leet", "code"]
+
+        1. DP TABLE & BASE CASE:
+           - dp array of size len(s) + 1 = 9 (indices 0 to 8).
+           - dp[i] represents whether substring s[i:] can be segmented into words.
+           - dp[8] = True (an empty string at the very end is always valid).
+
+        2. BACKWARD ITERATION (Right to Left):
+           - Loops backwards from i = 7 down to 0, testing each word in wordDict.
+           - At i = 4 ('c'): Tests word "code" (len 4). It fits (4 + 4 <= 8) and 
+             matches s[4:8] == "code". Sets dp[4] = dp[8] (True).
+           - At i = 0 ('l'): Tests word "leet" (len 4). It fits (0 + 4 <= 8) and 
+             matches s[0:4] == "leet". Sets dp[0] = dp[4] (True) and breaks early.
+
+        3. FINAL RESULT:
+           - Returns dp[0], which is True (indicating the entire string is valid).
+        ========================================================================
+        """
+
 class Solution:
     def wordBreak(self, s: str, wordDict: list[str]) -> bool:
         # dp[i] represents whether the substring s[i:] can be segmented into dictionary words.
