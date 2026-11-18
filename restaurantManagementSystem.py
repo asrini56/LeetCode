@@ -1,3 +1,32 @@
+"""
+CLASS BLUEPRINT:
+
+1. TableStatus (Enum)
+   - Variables: AVAILABLE, OCCUPIED
+   - Methods: None
+
+2. OrderStatus (Enum)
+   - Variables: PLACED, PREPARING, READY, COMPLETED
+   - Methods: None
+
+3. MenuItem
+   - Variables: item_id, name, price
+   - Methods: __init__()
+
+4. Table
+   - Variables: table_id, capacity, status, lock
+   - Methods: __init__(), occupy(), release()
+
+5. Order
+   - Variables: order_id, table_id, items, status, total_amount, lock
+   - Methods: __init__(), update_status()
+
+6. RestaurantManager
+   - Variables: tables, menu, orders, lock
+   - Methods: __init__(), add_table(), add_menu_item(), assign_table(), 
+              place_order(), update_order_status(), checkout_and_free_table()
+"""
+
 from enum import Enum
 import threading
 from typing import List, Dict, Optional
