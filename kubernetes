@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Kubernetes Debugging & Triage Command Reference
+# Replace placeholders (<pod-name>, <namespace>, <container-name>, <service-name>, <node-name>, <deployment-name>) before running.
+
+# ==============================================================================
+# 1. GENERAL POD, WORKLOAD, LOGS, EXEC & NETWORKING
+# ==============================================================================
+kubectl get pods -A -o wide
+kubectl describe pod <pod-name> -n <namespace>
+kubectl get events -n <namespace> --sort-by=.lastTimestamp
+kubectl get deploy,rs,sts -n <namespace>
+kubectl rollout status deploy/<deployment-name> -n <namespace>
+
+# Logs
+kubectl logs -f <pod-name> -n <namespace>
+kubectl logs <pod-name> -c <container-name> -n <namespace>
+kubectl logs <pod-name> -n <namespace> --previous
+kubectl logs <pod-name> -n <namespace> --since=15m --tail=200
+
+# Exec, ephemeral debug container & file copy
+kubectl exec -it <pod-name> -n <namespace> -- sh
+kubectl exec <pod-name> -n <namespace> -- env
+kubectl debug -it <pod-name> -n <namespace> --image=busybox:1.36 --target=<container-name> -- sh
+kubectl cp <namespace>/<pod-name>:/path/in/pod ./local-file
+
+# Services, endpoints, port-forward & netshoot DNS/HTTP check
+kubectl get svc,endpoints,ep -n <namespace>
+kubectl describe svc <service-name> -n <namespace>
+kubectl port-forward pod/<pod-name> 8080:80 -n <namespace>
+kubectl port-forward svc/<service-name> 8080:80 -n <namespace>
+kubectl run netdebug --rm -it --image=nicolaka/netshoot -n <namespace> -- /bin/sh
+# Inside netshoot:
+#   nslookup <service-name>.<namespace>.svc.cluster.local
+#   curl -v http://<service-name>:<port>/health
+
+# ==============================================================================
+# 2. CRASHLOOPBACKOFF & PENDING TRIAGE
+# ==============================================================================
+# CrashLoopBackOff: check Last State / exit code (137 = OOMKilled, 1 = app error, 139/143 = signal/probe)
+kubectl describe pod <pod-name> -n <namespace>
+kubectl logs <pod-name> -n <namespace> --previous
+kubectl logs <pod-name> -c <container-name> -n <namespace> --previous
+
+# Pending: check scheduler Events, node readiness/capacity, PVCs, quotas & limit ranges
+kubectl describe pod <pod-name> -n <namespace>
+kubectl get nodes -o wide
+kubectl describe node <node-name>
+kubectl get pvc,pv -n <namespace>
+kubectl get resourcequota,limitrange -n <namespace>
+
+# ==============================================================================
+# 3. KUBERNETES DNS DEBUGGING (COREDNS / KUBE-DNS)
+# ==============================================================================
+kubectl get pods -n kube-system -l k8s-app=kube-dns -o wide
+kubectl get svc,ep kube-dns -n kube-system
+kubectl logs -n kube-system -l k8s-app=kube-dns --tail=100
+kubectl get events -n kube-system --sort-by=.lastTimestamp | tail -n 20
+
+# Pod DNS policy, config & network policies
+kubectl get pod <pod-name> -n <namespace> -o jsonpath='{.spec.dnsPolicy}{" "}{.spec.dnsConfig}{"\n"}'
+kubectl get networkpolicy -A
+
+# CoreDNS ConfigMap & node status
+kubectl get configmap coredns -n kube-system -o yaml
+kubectl get nodes -o wide
+
+# Interactive DNS test pod
+kubectl run dnstest --rm -it --image=busybox:1.36 -n <namespace> -- sh
+# Inside dnstest:
+#   cat /etc/resolv.conf
+#   nslookup kubernetes.default.svc.cluster.local
+#   nslookup <target-service>.<other-namespace>.svc.cluster.local
+#   nslookup google.com
+
+# ==============================================================================
+# 4. OOM / MEMORY PRESSURE CHECKS
+# ==============================================================================
+kubectl describe pod <pod-name> -n <namespace>
+kubectl top pods -n <namespace> --sort-by=memory
+kubectl top nodes
+kubectl get pod <pod-name> -n <namespace> -o jsonpath='{range .spec.containers[*]}{.name}{" req="}{.resources.requests.memory}{" lim="}{.resources.limits.memory}{"\n"}{end}'
+kubectl logs <pod-name> -n <namespace> --previous --tail=100
+kubectl describe node <node-name> | grep -A 5 "Conditions:"
